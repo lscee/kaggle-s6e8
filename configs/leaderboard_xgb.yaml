@@ -1,0 +1,31 @@
+extends: leaderboard_v2.yaml
+
+training:
+  experiments:
+    - name: xgb_raw
+      model: xgboost
+      view: raw
+      params:
+        n_estimators: 1800
+        learning_rate: 0.05
+        max_depth: 7
+        min_child_weight: 10
+        subsample: 0.90
+        colsample_bytree: 0.90
+        reg_alpha: 0.05
+        reg_lambda: 2.0
+    - name: xgb_engineered
+      model: xgboost
+      view: engineered
+      params:
+        n_estimators: 1800
+        learning_rate: 0.05
+        max_depth: 6
+        min_child_weight: 12
+        subsample: 0.85
+        colsample_bytree: 0.80
+        reg_alpha: 0.10
+        reg_lambda: 2.5
+
+output:
+  directory: outputs/leaderboard_v2

@@ -1,0 +1,110 @@
+project:
+  target: addicted_label
+  id_column: id
+
+data:
+  train_path: data/raw/train.csv
+  test_path: data/raw/test.csv
+  sample_submission_path: data/raw/sample_submission.csv
+  parent_data_path: data/external/smartphone_parent/Smartphone_Usage_And_Addiction_Analysis_7500_Rows.csv
+
+cv:
+  n_splits: 5
+  seed: 20260803
+
+features:
+  use_id: false
+  engineered: true
+  default_view: engineered
+  drop_columns: []
+  parent_neighbors:
+    neighbors: [1, 3, 5, 10, 25]
+    categorical_weight: 1.25
+    smoothing: 1.0
+    algorithm: kd_tree
+    leaf_size: 40
+    batch_size: 50000
+    n_jobs: -1
+    cache_path: data/processed/parent_neighbors_v1.npz
+
+training:
+  seeds: [20260803]
+  models:
+    - catboost
+    - lightgbm
+    - extra_trees
+    - logistic
+  skip_missing_models: true
+
+models:
+  catboost:
+    iterations: 2500
+    learning_rate: 0.04
+    depth: 8
+    l2_leaf_reg: 5.0
+    random_strength: 0.5
+    loss_function: Logloss
+    eval_metric: AUC
+    od_type: Iter
+    early_stopping_rounds: 150
+    verbose: false
+    allow_writing_files: false
+    thread_count: -1
+
+  lightgbm:
+    n_estimators: 3000
+    learning_rate: 0.03
+    num_leaves: 31
+    max_depth: -1
+    min_child_samples: 40
+    subsample: 0.85
+    colsample_bytree: 0.85
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+    objective: binary
+    n_jobs: -1
+    verbosity: -1
+    early_stopping_rounds: 150
+
+  xgboost:
+    n_estimators: 3000
+    learning_rate: 0.03
+    max_depth: 7
+    min_child_weight: 10
+    subsample: 0.9
+    colsample_bytree: 0.9
+    reg_alpha: 0.05
+    reg_lambda: 2.0
+    gamma: 0.0
+    objective: binary:logistic
+    eval_metric: auc
+    tree_method: hist
+    max_bin: 256
+    early_stopping_rounds: 150
+    n_jobs: -1
+
+  extra_trees:
+    n_estimators: 300
+    max_depth: 16
+    min_samples_leaf: 5
+    max_features: 0.9
+    n_jobs: -1
+    class_weight: null
+
+  logistic:
+    C: 1.0
+    max_iter: 1500
+    solver: liblinear
+
+ensemble:
+  method: stable_rank
+  max_steps: 40
+  min_improvement: 0.000001
+  bootstrap_rounds: 25
+  bootstrap_fraction: 0.8
+  bootstrap_max_rows: 120000
+  min_selection_frequency: 0.15
+  seed: 20260803
+
+output:
+  directory: outputs/base

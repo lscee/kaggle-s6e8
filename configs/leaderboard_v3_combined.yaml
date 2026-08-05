@@ -1,0 +1,22 @@
+extends: leaderboard_v3_public.yaml
+
+public_stack:
+  additional_prediction_sources:
+    - directory: outputs/leaderboard_v3_seed42
+      prefix: ours
+      include_models:
+        - lgb_raw_bagged
+        - lgb_raw_wide
+        - xgb_raw
+        - xgb_raw_seed2
+        - xgb_engineered_long
+        - xgb_engineered_long_seed2
+        - xgb_engineered_shallow
+  additional_logit_parquet_sources:
+    - directory: data/external/public_oof/fm_lattice_v5/extracted
+      prefix: fm
+      oof_file: oof_members.parquet
+      test_file: test_members.parquet
+
+output:
+  directory: outputs/leaderboard_v3_combined

@@ -1,0 +1,74 @@
+extends: gpu_wsl.yaml
+
+training:
+  seeds: [20260803]
+  experiments:
+    - name: lgb_raw_fast
+      model: lightgbm
+      view: raw
+    - name: lgb_engineered
+      model: lightgbm
+      view: engineered
+    - name: lgb_parent
+      model: lightgbm
+      view: engineered_parent
+      params:
+        num_leaves: 47
+        min_child_samples: 60
+    - name: xgb_engineered
+      model: xgboost
+      view: engineered
+    - name: xgb_parent
+      model: xgboost
+      view: engineered_parent
+      params:
+        max_depth: 8
+        min_child_weight: 15
+    - name: cat_engineered
+      model: catboost
+      view: engineered
+    - name: cat_parent
+      model: catboost
+      view: engineered_parent
+
+models:
+  lightgbm:
+    n_estimators: 1600
+    learning_rate: 0.06
+    early_stopping_rounds: 100
+
+  catboost:
+    iterations: 1800
+    learning_rate: 0.06
+    early_stopping_rounds: 100
+
+  xgboost:
+    n_estimators: 1800
+    learning_rate: 0.05
+    early_stopping_rounds: 100
+
+ensemble:
+  method: stable_rank
+  max_steps: 30
+  bootstrap_rounds: 15
+  bootstrap_fraction: 0.8
+  bootstrap_max_rows: 120000
+  min_selection_frequency: 0.15
+  include_models:
+    - lgb_raw_3000
+    - lgb_raw_fast
+    - lgb_engineered
+    - lgb_parent
+    - cat_engineered
+    - lgb_raw_bagged
+    - lgb_raw_wide
+    - xgb_raw
+    - xgb_engineered
+    - xgb_engineered_seed2
+    - xgb_engineered_long
+    - xgb_engineered_shallow
+    - xgb_raw_seed2
+    - xgb_engineered_long_seed2
+
+output:
+  directory: outputs/leaderboard_v2

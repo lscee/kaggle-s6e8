@@ -1,0 +1,25 @@
+extends: gpu_wsl.yaml
+
+public_stack:
+  library_dir: data/external/public_oof/library_v6
+  n_splits: 5
+  seed: 42
+  global_c: 1.0
+  regime_c_grid: [0.03, 0.1]
+  regime_safety_margin: 0.00002
+  max_iter: 5000
+  tolerance: 0.00001
+  exclude_models: []
+  postprocess:
+    enabled: true
+    regime_rank_weight: 0.6666666666666666
+    minimum_oof_gain: 0.000015
+    band_source_dir: data/external/public_oof/fm_lattice_v5/extracted
+    bands:
+      - file: band_3_6h.parquet
+        weight: 0.06
+      - file: band_6_78h.parquet
+        weight: 0.08
+
+output:
+  directory: outputs/leaderboard_v3_public

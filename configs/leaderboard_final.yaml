@@ -1,0 +1,125 @@
+extends: gpu_wsl.yaml
+
+training:
+  experiments:
+    - name: lgb_raw_bagged
+      model: lightgbm
+      view: raw
+      seeds: [20260803]
+      params:
+        n_estimators: 1900
+        learning_rate: 0.055
+        num_leaves: 31
+        min_child_samples: 45
+        subsample: 0.80
+        subsample_freq: 1
+        colsample_bytree: 0.75
+        reg_alpha: 0.10
+        reg_lambda: 2.0
+        early_stopping_rounds: 100
+    - name: lgb_raw_wide
+      model: lightgbm
+      view: raw
+      seeds: [20260803]
+      params:
+        n_estimators: 1600
+        learning_rate: 0.05
+        num_leaves: 63
+        min_child_samples: 80
+        subsample: 0.90
+        subsample_freq: 1
+        colsample_bytree: 0.90
+        reg_alpha: 0.15
+        reg_lambda: 3.0
+        early_stopping_rounds: 100
+    - name: xgb_raw
+      model: xgboost
+      view: raw
+      seeds: [20260803]
+      params:
+        n_estimators: 1800
+        learning_rate: 0.05
+        max_depth: 7
+        min_child_weight: 10
+        subsample: 0.90
+        colsample_bytree: 0.90
+        reg_alpha: 0.05
+        reg_lambda: 2.0
+        early_stopping_rounds: 100
+    - name: xgb_raw_seed2
+      model: xgboost
+      view: raw
+      seeds: [20260829]
+      params:
+        n_estimators: 1800
+        learning_rate: 0.05
+        max_depth: 7
+        min_child_weight: 10
+        subsample: 0.90
+        colsample_bytree: 0.90
+        reg_alpha: 0.05
+        reg_lambda: 2.0
+        early_stopping_rounds: 100
+    - name: xgb_engineered_long
+      model: xgboost
+      view: engineered
+      seeds: [20260803]
+      params:
+        n_estimators: 2600
+        learning_rate: 0.04
+        max_depth: 6
+        min_child_weight: 12
+        subsample: 0.85
+        colsample_bytree: 0.80
+        reg_alpha: 0.10
+        reg_lambda: 2.5
+        early_stopping_rounds: 150
+    - name: xgb_engineered_long_seed2
+      model: xgboost
+      view: engineered
+      seeds: [20260829]
+      params:
+        n_estimators: 2600
+        learning_rate: 0.04
+        max_depth: 6
+        min_child_weight: 12
+        subsample: 0.85
+        colsample_bytree: 0.80
+        reg_alpha: 0.10
+        reg_lambda: 2.5
+        early_stopping_rounds: 150
+    - name: xgb_engineered_shallow
+      model: xgboost
+      view: engineered
+      seeds: [20260803]
+      params:
+        n_estimators: 2200
+        learning_rate: 0.055
+        max_depth: 5
+        min_child_weight: 10
+        subsample: 0.85
+        colsample_bytree: 0.80
+        reg_alpha: 0.10
+        reg_lambda: 2.5
+        early_stopping_rounds: 100
+
+ensemble:
+  method: stable_rank
+  max_steps: 30
+  min_improvement: 0.000001
+  bootstrap_rounds: 15
+  bootstrap_fraction: 0.8
+  bootstrap_max_rows: 120000
+  min_selection_frequency: 0.15
+  seed: 20260803
+  include_models:
+    - lgb_raw_bagged
+    - lgb_raw_wide
+    - xgb_raw
+    - xgb_raw_seed2
+    - xgb_engineered_long
+    - xgb_engineered_long_seed2
+    - xgb_engineered_shallow
+
+output:
+  directory: outputs/leaderboard_final

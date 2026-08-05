@@ -1,0 +1,23 @@
+extends: gpu_wsl.yaml
+
+cv:
+  n_splits: 2
+
+training:
+  seeds: [20260803]
+  models:
+    - catboost
+    - lightgbm
+
+models:
+  catboost:
+    iterations: 120
+    depth: 7
+    early_stopping_rounds: 30
+
+  lightgbm:
+    n_estimators: 160
+    early_stopping_rounds: 30
+
+output:
+  directory: outputs/gpu_smoke

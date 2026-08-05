@@ -1,0 +1,47 @@
+extends: leaderboard_v2.yaml
+
+training:
+  experiments:
+    - name: xgb_engineered_seed2
+      model: xgboost
+      view: engineered
+      seeds: [20260829]
+      params:
+        n_estimators: 1800
+        learning_rate: 0.05
+        max_depth: 6
+        min_child_weight: 12
+        subsample: 0.85
+        colsample_bytree: 0.80
+        reg_alpha: 0.10
+        reg_lambda: 2.5
+    - name: xgb_engineered_long
+      model: xgboost
+      view: engineered
+      seeds: [20260803]
+      params:
+        n_estimators: 2600
+        learning_rate: 0.04
+        max_depth: 6
+        min_child_weight: 12
+        subsample: 0.85
+        colsample_bytree: 0.80
+        reg_alpha: 0.10
+        reg_lambda: 2.5
+        early_stopping_rounds: 150
+    - name: xgb_engineered_shallow
+      model: xgboost
+      view: engineered
+      seeds: [20260803]
+      params:
+        n_estimators: 2200
+        learning_rate: 0.055
+        max_depth: 5
+        min_child_weight: 10
+        subsample: 0.85
+        colsample_bytree: 0.80
+        reg_alpha: 0.10
+        reg_lambda: 2.5
+
+output:
+  directory: outputs/leaderboard_v2

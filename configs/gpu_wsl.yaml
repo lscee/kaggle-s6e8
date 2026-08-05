@@ -1,0 +1,23 @@
+extends: base.yaml
+
+training:
+  models:
+    - catboost
+    - lightgbm
+
+models:
+  catboost:
+    task_type: GPU
+    devices: "0"
+    gpu_ram_part: 0.85
+
+  lightgbm:
+    device_type: cuda
+    gpu_device_id: 0
+
+  xgboost:
+    device: cuda
+    tree_method: hist
+
+output:
+  directory: outputs/gpu_wsl

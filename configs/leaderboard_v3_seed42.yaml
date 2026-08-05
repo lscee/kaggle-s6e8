@@ -1,0 +1,10 @@
+extends: leaderboard_final.yaml
+
+# Frozen to the same fold assignment as the audited public OOF bank so these
+# predictions can be used as additional level-1 members without row/fold mismatch.
+cv:
+  n_splits: 5
+  seed: 42
+
+output:
+  directory: outputs/leaderboard_v3_seed42

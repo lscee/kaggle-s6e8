@@ -1,0 +1,11 @@
+extends: leaderboard_v3_public.yaml
+
+public_stack:
+  additional_logit_parquet_sources:
+    - directory: data/external/public_oof/fm_lattice_v5/extracted
+      prefix: fm
+      oof_file: oof_members.parquet
+      test_file: test_members.parquet
+
+output:
+  directory: outputs/leaderboard_v3_fm
