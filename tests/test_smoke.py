@@ -134,6 +134,52 @@ class PipelineSmokeTest(unittest.TestCase):
             )
         )
 
+    def test_fm_rank_config_preserves_the_complete_stack(self):
+        config = load_config(
+            os.path.join(ROOT, "configs", "leaderboard_v4_fm_rank.yaml")
+        )
+        prediction_sources = config["public_stack"][
+            "additional_prediction_sources"
+        ]
+        self.assertEqual(len(prediction_sources), 2)
+        self.assertEqual(
+            prediction_sources[1]["include_models"], ["fm_rank_cross"]
+        )
+        self.assertEqual(
+            len(config["public_stack"]["additional_logit_parquet_sources"]), 1
+        )
+        self.assertEqual(config["public_stack"]["regime_c_grid"], [0.03])
+
+    def test_budget_geometry_values_and_validity_align(self):
+        import importlib.util
+        import numpy as np
+
+        if importlib.util.find_spec("torch") is None:
+            self.skipTest("PyTorch is optional and tested in the WSL GPU environment")
+        script_path = os.path.join(ROOT, "scripts", "train_budget_cross.py")
+        spec = importlib.util.spec_from_file_location("train_budget_cross", script_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        values = np.array(
+            [
+                [24, 8, 2, 1, 3, 7, 100, 20, 9],
+                [30, 0, 2, 0, 1, 8, 0, 15, 0],
+            ],
+            dtype=np.float32,
+        )
+        observed = np.array(
+            [
+                [1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 0, 1, 0, 1, 1, 0, 1, 0],
+            ],
+            dtype=bool,
+        )
+        geometry, valid = module.budget_geometry_numpy(values, observed, 15.0)
+        self.assertEqual(geometry.shape, valid.shape)
+        self.assertEqual(geometry.shape[1], 31)
+        self.assertTrue(np.isfinite(geometry).all())
+        self.assertGreater(int(valid[0].sum()), int(valid[1].sum()))
+
     def test_public_regime_design(self):
         import numpy as np
 

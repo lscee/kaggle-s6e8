@@ -1,0 +1,24 @@
+extends: leaderboard_v3_combined.yaml
+
+# The list is repeated intentionally: YAML config inheritance replaces lists instead
+# of appending to them.  This keeps all seven local GBDTs and adds the new FM member.
+public_stack:
+  regime_c_grid: [0.03]
+  additional_prediction_sources:
+    - directory: outputs/leaderboard_v3_seed42
+      prefix: ours
+      include_models:
+        - lgb_raw_bagged
+        - lgb_raw_wide
+        - xgb_raw
+        - xgb_raw_seed2
+        - xgb_engineered_long
+        - xgb_engineered_long_seed2
+        - xgb_engineered_shallow
+    - directory: outputs/leaderboard_v4_fm_rank
+      prefix: neural_fm
+      include_models:
+        - fm_rank_cross
+
+output:
+  directory: outputs/leaderboard_v4_combined

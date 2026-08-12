@@ -6,6 +6,8 @@
 
 最新方案、完整消融和提交策略见 [LEADERBOARD_V3.md](LEADERBOARD_V3.md)，早期纯本地 GPU GBDT 方案见 [LEADERBOARD_V2.md](LEADERBOARD_V2.md)。
 
+2026-08-12 的新架构冲榜复测见 [LEADERBOARD_V4_EXPERIMENTS.md](LEADERBOARD_V4_EXPERIMENTS.md)：已实际筛选 missingness V2、GAM/EBM、FM-rank、非线性 meta 和约束几何 DCNv2；最佳新增量只有 `+0.000004383`，因此没有用实验噪声替换当前 V3 主候选。
+
 ## 项目概览
 
 | 项目 | 当前实现 |
