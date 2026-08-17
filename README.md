@@ -4,7 +4,10 @@
 
 > **当前战绩（2026-08-06）**：Public LB **0.97084**，排名 **42 / 约 770**，约为公开榜 **Top 5.5%**；当时榜一为 **0.97115**，实际差距是 **0.00031**。公开榜只使用约 20% 测试集，最终排名由另外约 80% 的 private 数据决定，因此本项目以固定 OOF 和逐折稳定性作为主要决策依据，而不是只追逐一次 public 分数。
 
-最新方案、完整消融和提交策略见 [LEADERBOARD_V3.md](LEADERBOARD_V3.md)，早期纯本地 GPU GBDT 方案见 [LEADERBOARD_V2.md](LEADERBOARD_V2.md)。
+最新 `0.971+` 公开方案审计、生成器痕迹模型与样条融合见
+[LEADERBOARD_V5_PUBLIC_0971.md](LEADERBOARD_V5_PUBLIC_0971.md)。V3 完整消融和提交
+策略见 [LEADERBOARD_V3.md](LEADERBOARD_V3.md)，早期纯本地 GPU GBDT 方案见
+[LEADERBOARD_V2.md](LEADERBOARD_V2.md)。
 
 2026-08-12 的新架构冲榜复测见 [LEADERBOARD_V4_EXPERIMENTS.md](LEADERBOARD_V4_EXPERIMENTS.md)：已实际筛选 missingness V2、GAM/EBM、FM-rank、非线性 meta 和约束几何 DCNv2；最佳新增量只有 `+0.000004383`，因此没有用实验噪声替换当前 V3 主候选。
 
@@ -18,10 +21,12 @@
 | 本地验证 | 固定 `StratifiedKFold(5, shuffle=True, random_state=42)` OOF |
 | 训练设备 | WSL2 + NVIDIA GeForce RTX 5090 D；XGBoost、LightGBM、CatBoost GPU 链路 |
 | 纯本地 GBDT OOF | 0.965110 |
-| 当前最强 OOF | **0.969750802**，86 个一级预测 + 缺失模式 meta + band 后处理 |
+| 当前最强同折 OOF | **0.969781998**，seed-42 样条进入 90 列完整 stack |
+| 当前最强挑战 OOF | **0.969788823**，90 列结果 + 4% 独立 seed-21 样条 rank-blend |
 | 当前 Public LB | **0.97084，Rank 42，Top 5.5%**（2026-08-06 快照） |
-| 主候选 | `outputs/leaderboard_v3_combined/submission.csv` |
-| 稳健候选 | `outputs/leaderboard_v3_fm/submission.csv` |
+| 稳健同折候选 | `outputs/leaderboard_v4_artifact_stack/submission.csv` |
+| 当前冲榜候选 | `outputs/leaderboard_v5_dual_spline_rank_w04/submission.csv` |
+| V3 回退候选 | `outputs/leaderboard_v3_combined/submission.csv` |
 
 ## 我完成了什么
 
@@ -70,7 +75,11 @@ flowchart TD
 | 公开库最佳单模型 | 0.968815 | `naji05` |
 | 74 模型 global stack | 0.969660 | 强公开 OOF 基准 |
 | 74 + 5 FM + regime + band | 0.969747 | 更稳健的 79 模型候选 |
-| 74 + 5 FM + 7 本地 GBDT + regime + band | **0.969751** | 当前最佳本地 OOF |
+| 74 + 5 FM + 7 本地 GBDT + regime + band | 0.969751 | V3 基线 |
+| V3 + 3 个生成器痕迹 GBDT | **0.969775** | 5/5 折提升，同折主候选 |
+| 89 列 + 5% 样条固定 rank-blend | **0.969785** | 低相关多样性挑战候选 |
+| 89 列 + seed-42 样条完整 stack | **0.969782** | 严格同折接入，增量偏弱 |
+| 90 列 + 4% 独立 seed-21 样条 rank | **0.969789** | 当前最高 OOF，5/5 折正向 |
 | Kaggle Public LB | **0.97084** | 2026-08-06：Rank 42 / 约 770 |
 
 目前属于**有竞争力的 Top 5% 冲榜方案**，已经进入头部高密度分数区，但还不是榜一。与当时第一名 `0.97115` 的差距只有 `0.00031`，不是 `0.05`；在这个阶段，增加相似树模型通常只能带来百万分位到十万分位的变化。更重要的是最终 80% private leaderboard 尚不可见，因此 `0.97084` 只能说明当前 public 表现强，不能保证最终名次。

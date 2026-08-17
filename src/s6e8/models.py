@@ -24,6 +24,14 @@ def model_available(name):
     try:
         importlib.import_module(module)
         return True
+    except OSError as error:
+        if name == "lightgbm" and "libnccl.so" in str(error):
+            # The CUDA LightGBM wheel expects NCCL symbols that the PyTorch CUDA
+            # runtime loads into the process on this WSL setup.
+            importlib.import_module("torch")
+            importlib.import_module(module)
+            return True
+        raise
     except ImportError:
         return False
 

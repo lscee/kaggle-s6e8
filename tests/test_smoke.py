@@ -18,7 +18,11 @@ from s6e8.config import load_config  # noqa: E402
 from s6e8.data import load_competition_data  # noqa: E402
 from s6e8.demo import make_demo_data  # noqa: E402
 from s6e8.ensemble import run_ensemble  # noqa: E402
-from s6e8.features import encode_for_sklearn, prepare_feature_frames  # noqa: E402
+from s6e8.features import (  # noqa: E402
+    add_generator_artifact_features,
+    encode_for_sklearn,
+    prepare_feature_frames,
+)
 from s6e8.models import model_available  # noqa: E402
 from s6e8.public_stack import (  # noqa: E402
     load_additional_predictions,
@@ -133,6 +137,59 @@ class PipelineSmokeTest(unittest.TestCase):
                 os.path.join("outputs", "gpu_wsl")
             )
         )
+
+    def test_generator_artifact_features(self):
+        import numpy as np
+        import pandas as pd
+
+        frame = pd.DataFrame(
+            {
+                "daily_screen_time_hours": [11.2, 8.42, np.nan],
+                "social_media_hours": [1.87, 2.57, 1.0],
+                "gaming_hours": [2.81, 3.41, 1.0],
+                "work_study_hours": [1.95, 1.9, 1.0],
+                "sleep_hours": [5.25, 6.64, 7.0],
+                "weekend_screen_time": [13.39, 8.35, 8.0],
+                "age": [26.0, 21.0, 30.0],
+                "notifications_per_day": [100.0, 80.0, 60.0],
+                "app_opens_per_day": [20.0, 15.0, 10.0],
+            }
+        )
+        result = add_generator_artifact_features(
+            frame, include_exact_categories=True
+        )
+        self.assertEqual(
+            result["daily_screen_time_hours__first_decimal_digit"].tolist()[:2],
+            ["2", "4"],
+        )
+        self.assertEqual(
+            result["daily_screen_time_hours__decimal_length"].tolist()[:2],
+            ["1", "2"],
+        )
+        self.assertAlmostEqual(
+            float(result.loc[0, "screen_component_residual"]), 4.57, places=6
+        )
+        self.assertEqual(
+            result.loc[0, "daily_screen_time_hours__exact_level"], "11.2"
+        )
+        self.assertTrue(
+            pd.isna(result.loc[2, "daily_screen_time_hours__first_decimal_digit"])
+        )
+
+    def test_artifact_feature_views_are_aligned(self):
+        train, test, _ = load_competition_data(self.config)
+        for view in ("artifact", "engineered_artifact", "artifact_cat"):
+            train_x, test_x = prepare_feature_frames(
+                train, test, self.config, view=view
+            )
+            self.assertEqual(list(train_x.columns), list(test_x.columns))
+            self.assertIn(
+                "daily_screen_time_hours__first_decimal_digit", train_x.columns
+            )
+        artifact_train, _ = prepare_feature_frames(
+            train, test, self.config, view="artifact_cat"
+        )
+        self.assertIn("daily_screen_time_hours__exact_level", artifact_train.columns)
 
     def test_fm_rank_config_preserves_the_complete_stack(self):
         config = load_config(

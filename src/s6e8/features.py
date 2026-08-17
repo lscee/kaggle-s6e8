@@ -6,12 +6,93 @@ import pandas as pd
 
 EPSILON = 1e-6
 
+TIME_COLUMNS = (
+    "daily_screen_time_hours",
+    "social_media_hours",
+    "gaming_hours",
+    "work_study_hours",
+    "sleep_hours",
+    "weekend_screen_time",
+)
+
+EXACT_LEVEL_COLUMNS = (
+    "age",
+    "daily_screen_time_hours",
+    "social_media_hours",
+    "gaming_hours",
+    "work_study_hours",
+    "sleep_hours",
+    "notifications_per_day",
+    "app_opens_per_day",
+    "weekend_screen_time",
+)
+
 
 def _safe_divide(numerator, denominator):
     denominator = denominator.astype(float)
     denominator = denominator.where(denominator.abs() > EPSILON, np.nan)
     result = numerator.astype(float) / denominator
     return result.replace([np.inf, -np.inf], np.nan)
+
+
+def _decimal_artifacts(series):
+    values = pd.to_numeric(series, errors="coerce").astype(float)
+    present = values.notna()
+    absolute = values.abs()
+    rounded_hundredths = np.rint(absolute * 100.0)
+
+    first_digit = ((rounded_hundredths // 10.0) % 10.0).astype("Int64")
+    first_digit = first_digit.astype(str).where(present, np.nan).astype(object)
+
+    second_digit = rounded_hundredths % 10.0
+    decimal_length = pd.Series(
+        np.where(second_digit == 0.0, "1", "2"), index=series.index, dtype=object
+    ).where(present, np.nan)
+    fractional_part = (absolute - np.floor(absolute)).where(present).astype(np.float32)
+    return first_digit, decimal_length, fractional_part
+
+
+def _exact_numeric_level(series):
+    present = series.notna()
+    return series.astype(str).where(present, np.nan).astype(object)
+
+
+def add_generator_artifact_features(frame, include_exact_categories=False):
+    """Add target-free artifacts exposed by the synthetic data generator."""
+    result = frame.copy()
+    for column in TIME_COLUMNS:
+        if column not in result.columns:
+            continue
+        first_digit, decimal_length, fractional_part = _decimal_artifacts(
+            result[column]
+        )
+        result["{}__first_decimal_digit".format(column)] = first_digit
+        result["{}__decimal_length".format(column)] = decimal_length
+        result["{}__fractional_part".format(column)] = fractional_part
+
+    screen = "daily_screen_time_hours"
+    components = ["social_media_hours", "gaming_hours", "work_study_hours"]
+    if screen in result.columns and all(
+        column in result.columns for column in components
+    ):
+        complete_components = result.loc[:, components].sum(axis=1, min_count=3)
+        residual = result[screen] - complete_components
+        result["screen_component_residual"] = residual
+        result["abs_screen_component_residual"] = residual.abs()
+        result["screen_components_exceed_daily"] = (residual < 0.0).where(
+            residual.notna()
+        ).astype(float)
+        result["screen_component_share"] = _safe_divide(
+            complete_components, result[screen]
+        )
+
+    if include_exact_categories:
+        for column in EXACT_LEVEL_COLUMNS:
+            if column in result.columns:
+                result["{}__exact_level".format(column)] = _exact_numeric_level(
+                    result[column]
+                )
+    return result
 
 
 def add_engineered_features(frame):
@@ -141,7 +222,16 @@ def prepare_feature_frames(train, test, config, view=None):
             "default_view",
             "engineered" if config["features"].get("engineered", True) else "raw",
         )
-    valid_views = {"raw", "engineered", "raw_parent", "engineered_parent"}
+    valid_views = {
+        "raw",
+        "engineered",
+        "artifact",
+        "engineered_artifact",
+        "artifact_cat",
+        "engineered_artifact_cat",
+        "raw_parent",
+        "engineered_parent",
+    }
     if view not in valid_views:
         raise ValueError(
             "Unknown feature view '{}'; expected one of {}".format(
@@ -151,9 +241,30 @@ def prepare_feature_frames(train, test, config, view=None):
 
     train_x = base_train_x
     test_x = base_test_x
-    if view in ("engineered", "engineered_parent"):
+    if view in (
+        "engineered",
+        "engineered_artifact",
+        "engineered_artifact_cat",
+        "engineered_parent",
+    ):
         train_x = add_engineered_features(train_x)
         test_x = add_engineered_features(test_x)
+    if view in (
+        "artifact",
+        "engineered_artifact",
+        "artifact_cat",
+        "engineered_artifact_cat",
+    ):
+        include_exact_categories = view in (
+            "artifact_cat",
+            "engineered_artifact_cat",
+        )
+        train_x = add_generator_artifact_features(
+            train_x, include_exact_categories=include_exact_categories
+        )
+        test_x = add_generator_artifact_features(
+            test_x, include_exact_categories=include_exact_categories
+        )
     if view in ("raw_parent", "engineered_parent"):
         from .external import build_parent_neighbor_features
 

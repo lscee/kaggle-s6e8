@@ -1,0 +1,47 @@
+extends: leaderboard_v3_seed42.yaml
+
+training:
+  experiments:
+    - name: cat_artifact_levels
+      model: catboost
+      view: artifact_cat
+      seeds: [20260803]
+      params:
+        iterations: 2200
+        learning_rate: 0.055
+        depth: 8
+        l2_leaf_reg: 6.0
+        random_strength: 0.35
+        early_stopping_rounds: 120
+    - name: xgb_generator_artifacts
+      model: xgboost
+      view: engineered_artifact
+      seeds: [20260803]
+      params:
+        n_estimators: 2600
+        learning_rate: 0.04
+        max_depth: 6
+        min_child_weight: 12
+        subsample: 0.85
+        colsample_bytree: 0.80
+        reg_alpha: 0.10
+        reg_lambda: 2.5
+        early_stopping_rounds: 150
+    - name: lgb_generator_artifacts
+      model: lightgbm
+      view: artifact
+      seeds: [20260803]
+      params:
+        n_estimators: 1900
+        learning_rate: 0.055
+        num_leaves: 31
+        min_child_samples: 45
+        subsample: 0.80
+        subsample_freq: 1
+        colsample_bytree: 0.75
+        reg_alpha: 0.10
+        reg_lambda: 2.0
+        early_stopping_rounds: 100
+
+output:
+  directory: outputs/leaderboard_v4_artifacts

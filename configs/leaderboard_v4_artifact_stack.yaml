@@ -1,0 +1,23 @@
+extends: leaderboard_v3_combined.yaml
+
+public_stack:
+  additional_prediction_sources:
+    - directory: outputs/leaderboard_v3_seed42
+      prefix: ours
+      include_models:
+        - lgb_raw_bagged
+        - lgb_raw_wide
+        - xgb_raw
+        - xgb_raw_seed2
+        - xgb_engineered_long
+        - xgb_engineered_long_seed2
+        - xgb_engineered_shallow
+    - directory: outputs/leaderboard_v4_artifacts
+      prefix: artifact
+      include_models:
+        - cat_artifact_levels
+        - xgb_generator_artifacts
+        - lgb_generator_artifacts
+
+output:
+  directory: outputs/leaderboard_v4_artifact_stack
